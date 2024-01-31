@@ -2,43 +2,67 @@ package org.example;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.Semaphore;
 
 public class FixedThreadPool implements ThreadPool {
 
     private final int amountOfThreads;
-    private ArrayList<Thread> threads = new ArrayList<>();
-    private final LinkedList<Runnable> list = new LinkedList<>();
+    private final LinkedList<Runnable> tasks = new LinkedList<>();
 
     public FixedThreadPool(int amountOfThreads) {
         this.amountOfThreads = amountOfThreads;
-        this.threads = new ArrayList<>(amountOfThreads);
     }
 
     @Override
     public void start() {
-        while (!list.isEmpty()) {
-            threads.removeIf(thread -> thread == null || !thread.isAlive());
-
-            if (threads.size() == amountOfThreads) {
-                continue;
+        new Thread( () -> {
+            Semaphore semaphore = new Semaphore(amountOfThreads);
+            List<FixedThread> fixedThreads = new ArrayList<>();
+            for (int i = 0; i < amountOfThreads; i++) {
+                FixedThread one = new FixedThread(semaphore, null);
+                fixedThreads.add(one);
+                one.start();
             }
-            Runnable runnable;
-            synchronized(list) {
-                runnable = list.peek();
-                if (runnable != null) {
-                    runnable = list.pop();
+
+            while (true) {
+                Runnable runnable;
+                synchronized (tasks) {
+                    runnable = tasks.peek();
+                    if (runnable != null) {
+                        Optional<FixedThread> first = fixedThreads.stream().filter(thread -> thread.getRunnable() == null).findFirst();
+                        if (first.isPresent()) {
+                            first.get().setRunnable(runnable);
+                            tasks.pop();
+                        }
+                    }
+                }
+                if (tasks.isEmpty()) {
+                    synchronized (this) {
+                        try {
+                            wait();
+                        } catch (InterruptedException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
                 }
             }
-            if (runnable != null) {
-                Thread thread = new Thread(runnable);
-                threads.add(thread);
-                thread.start();
-            }
-        }
+        }).start();
     }
 
     @Override
     public void execute(Runnable runnable) {
-        list.add(runnable);
+        if (tasks.isEmpty()) {
+            tasks.add(runnable);
+            new Thread(() -> {
+                synchronized (this) {
+                    System.out.println("notified");
+                    notify();
+                }
+            }).start();
+        } else {
+            tasks.add(runnable);
+        }
     }
 }
