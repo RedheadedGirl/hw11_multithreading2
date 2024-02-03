@@ -22,6 +22,10 @@ public class ScalableThreadPool implements ThreadPool {
         }
     }
 
+    public LinkedList<Runnable> getTasks() {
+        return tasks;
+    }
+
     @Override
     public void start() {
         new Thread( () -> {

@@ -15,6 +15,14 @@ public class FixedThreadPool implements ThreadPool {
         this.amountOfThreads = amountOfThreads;
     }
 
+    public int getAmountOfThreads() {
+        return amountOfThreads;
+    }
+
+    public LinkedList<Runnable> getTasks() {
+        return tasks;
+    }
+
     @Override
     public void start() {
         new Thread( () -> {
