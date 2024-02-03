@@ -1,9 +1,11 @@
 package org.example;
 
+import org.example.exceptions.SettingException;
+
 public class Main {
-    public static void main(String[] args) {
-        fixedThreadPool();
-//        scalableThreadPool();
+    public static void main(String[] args) throws SettingException {
+//        fixedThreadPool();
+        scalableThreadPool();
     }
 
     private static void fixedThreadPool() {
@@ -26,7 +28,7 @@ public class Main {
         }
     }
 
-    private static void scalableThreadPool() {
+    private static void scalableThreadPool() throws SettingException {
         ScalableThreadPool scalableThreadPool = new ScalableThreadPool(2, 3);
         scalableThreadPool.execute(getRunnable(1));
         scalableThreadPool.execute(getRunnable(2));

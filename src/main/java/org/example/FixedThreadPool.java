@@ -19,21 +19,17 @@ public class FixedThreadPool implements ThreadPool {
     public void start() {
         new Thread( () -> {
             Semaphore semaphore = new Semaphore(amountOfThreads);
-            List<FixedThread> fixedThreads = new ArrayList<>();
-            for (int i = 0; i < amountOfThreads; i++) {
-                FixedThread one = new FixedThread(semaphore, null);
-                fixedThreads.add(one);
-                one.start();
-            }
+            List<FixedThread> fixedThreads = createDefaultThreads(semaphore);
 
             while (true) {
                 Runnable runnable;
                 synchronized (tasks) {
                     runnable = tasks.peek();
                     if (runnable != null && !tasks.isEmpty()) {
-                        Optional<FixedThread> first = fixedThreads.stream().filter(thread -> thread.getRunnable() == null).findFirst();
+                        Optional<FixedThread> first = fixedThreads.stream()
+                                .filter(thread -> thread.getRunnable() == null)
+                                .findFirst();
                         if (first.isPresent()) {
-                            System.out.println("fixed is present ");
                             first.get().setRunnable(runnable);
                             tasks.pop();
                         }
@@ -65,5 +61,15 @@ public class FixedThreadPool implements ThreadPool {
         } else {
             tasks.add(runnable);
         }
+    }
+
+    private List<FixedThread> createDefaultThreads(Semaphore semaphore) {
+        List<FixedThread> fixedThreads = new ArrayList<>();
+        for (int i = 0; i < amountOfThreads; i++) {
+            FixedThread one = new FixedThread(semaphore, null);
+            fixedThreads.add(one);
+            one.start();
+        }
+        return fixedThreads;
     }
 }

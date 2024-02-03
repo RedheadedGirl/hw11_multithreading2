@@ -1,32 +1,32 @@
 package org.example;
 
+import org.example.exceptions.SettingException;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Semaphore;
-import java.util.stream.Collectors;
 
 public class ScalableThreadPool implements ThreadPool {
     private final int minAmountOfThreads;
     private final int maxAmountOfThreads;
     private final LinkedList<Runnable> tasks = new LinkedList<>();
 
-    public ScalableThreadPool(int minAmountOfThreads, int maxAmountOfThreads) {
+    public ScalableThreadPool(int minAmountOfThreads, int maxAmountOfThreads) throws SettingException {
         this.minAmountOfThreads = minAmountOfThreads;
         this.maxAmountOfThreads = maxAmountOfThreads;
+
+        if(minAmountOfThreads > maxAmountOfThreads) {
+            throw new SettingException("Неверно задано число потоков!");
+        }
     }
 
     @Override
     public void start() {
         new Thread( () -> {
             Semaphore semaphore = new Semaphore(maxAmountOfThreads);
-            List<FixedThread> fixedThreads = new ArrayList<>();
-            for (int i = 0; i < minAmountOfThreads; i++) {
-                FixedThread one = new FixedThread(semaphore, null);
-                fixedThreads.add(one);
-                one.start();
-            }
+            List<FixedThread> fixedThreads = createDefaultThreads(semaphore);
 
             while (true) {
                 Runnable runnable;
@@ -57,15 +57,7 @@ public class ScalableThreadPool implements ThreadPool {
                     }
                 }
 
-                // зачищаем нерабочие потоки, оставляя минимальное кол-во
-                List<FixedThread> notWorkingThreads = fixedThreads.stream()
-                        .filter(thread -> thread.getRunnable() == null)
-                        .limit(maxAmountOfThreads - minAmountOfThreads)
-                        .collect(Collectors.toList());
-                if (!notWorkingThreads.isEmpty()) {
-                    System.out.println("found not working threads: " + notWorkingThreads.size());
-                }
-                fixedThreads.removeAll(notWorkingThreads);
+                cleanUnnecessaryThreads(fixedThreads);
             }
         }).start();
     }
@@ -82,5 +74,27 @@ public class ScalableThreadPool implements ThreadPool {
         } else {
             tasks.add(runnable);
         }
+    }
+
+    private List<FixedThread> createDefaultThreads(Semaphore semaphore) {
+        List<FixedThread> fixedThreads = new ArrayList<>();
+        for (int i = 0; i < minAmountOfThreads; i++) {
+            FixedThread one = new FixedThread(semaphore, null);
+            fixedThreads.add(one);
+            one.start();
+        }
+        return fixedThreads;
+    }
+
+    private void cleanUnnecessaryThreads(List<FixedThread> fixedThreads) {
+        // зачищаем нерабочие потоки, оставляя минимальное кол-во
+        List<FixedThread> notWorkingThreads = fixedThreads.stream()
+                .filter(thread -> thread.getRunnable() == null)
+                .limit(maxAmountOfThreads - minAmountOfThreads)
+                .toList();
+        if (!notWorkingThreads.isEmpty()) {
+            System.out.println("found not working threads: " + notWorkingThreads.size());
+        }
+        fixedThreads.removeAll(notWorkingThreads);
     }
 }

@@ -27,7 +27,7 @@ public class FixedThread extends Thread {
             try {
                 Thread.sleep(100);
                 if (runnable != null) {
-                    System.out.println("Fixed thread " + Thread.currentThread().getName());
+//                    System.out.println("Fixed thread " + Thread.currentThread().getName());
                     sem.acquire();
                     runnable.run();
                     sem.release();
