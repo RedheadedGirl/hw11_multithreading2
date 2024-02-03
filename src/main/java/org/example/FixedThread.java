@@ -15,6 +15,7 @@ public class FixedThread extends Thread {
 
     public void setRunnable(Runnable runnable) {
         this.runnable = runnable;
+        System.out.println("set runnable " + runnable.toString());
     }
 
     public Runnable getRunnable() {
@@ -24,7 +25,9 @@ public class FixedThread extends Thread {
     public void run() {
         while(true) {
             try {
+                Thread.sleep(100);
                 if (runnable != null) {
+                    System.out.println("Fixed thread " + Thread.currentThread().getName());
                     sem.acquire();
                     runnable.run();
                     sem.release();

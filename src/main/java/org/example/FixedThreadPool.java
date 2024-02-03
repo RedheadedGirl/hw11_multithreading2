@@ -30,9 +30,10 @@ public class FixedThreadPool implements ThreadPool {
                 Runnable runnable;
                 synchronized (tasks) {
                     runnable = tasks.peek();
-                    if (runnable != null) {
+                    if (runnable != null && !tasks.isEmpty()) {
                         Optional<FixedThread> first = fixedThreads.stream().filter(thread -> thread.getRunnable() == null).findFirst();
                         if (first.isPresent()) {
+                            System.out.println("fixed is present ");
                             first.get().setRunnable(runnable);
                             tasks.pop();
                         }
@@ -42,6 +43,7 @@ public class FixedThreadPool implements ThreadPool {
                     synchronized (this) {
                         try {
                             wait();
+                            System.out.println("дождался, размер списка задач: " + tasks.size());
                         } catch (InterruptedException e) {
                             throw new RuntimeException(e);
                         }
@@ -54,10 +56,9 @@ public class FixedThreadPool implements ThreadPool {
     @Override
     public void execute(Runnable runnable) {
         if (tasks.isEmpty()) {
-            tasks.add(runnable);
             new Thread(() -> {
                 synchronized (this) {
-                    System.out.println("notified");
+                    tasks.add(runnable);
                     notify();
                 }
             }).start();
