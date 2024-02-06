@@ -21,9 +21,7 @@ public class ScalableThreadPool implements ThreadPool {
         this.minAmountOfThreads = minAmountOfThreads;
         this.maxAmountOfThreads = maxAmountOfThreads;
 
-        if(minAmountOfThreads > maxAmountOfThreads) {
-            throw new SettingException("Неверно задано число потоков!");
-        }
+        checkCorrectSetting();
     }
 
     @Override
@@ -51,16 +49,7 @@ public class ScalableThreadPool implements ThreadPool {
                         }
                     }
                 }
-                if (tasks.isEmpty()) {
-                    synchronized (this) {
-                        try {
-                            wait();
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                }
-
+                waitWhenTasksEmpty();
                 cleanUnnecessaryThreads(fixedThreads);
             }
         }).start();
@@ -77,6 +66,18 @@ public class ScalableThreadPool implements ThreadPool {
             }).start();
         } else {
             tasks.add(runnable);
+        }
+    }
+
+    private void waitWhenTasksEmpty() {
+        if (tasks.isEmpty()) {
+            synchronized (this) {
+                try {
+                    wait();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
         }
     }
 
@@ -100,5 +101,11 @@ public class ScalableThreadPool implements ThreadPool {
             System.out.println("found not working threads: " + notWorkingThreads.size());
         }
         fixedThreads.removeAll(notWorkingThreads);
+    }
+
+    private void checkCorrectSetting() throws SettingException {
+        if(minAmountOfThreads > maxAmountOfThreads) {
+            throw new SettingException("Неверно задано число потоков!");
+        }
     }
 }
