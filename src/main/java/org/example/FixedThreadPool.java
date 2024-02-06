@@ -1,11 +1,14 @@
 package org.example;
 
+import lombok.Getter;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Semaphore;
 
+@Getter
 public class FixedThreadPool implements ThreadPool {
 
     private final int amountOfThreads;
@@ -13,14 +16,6 @@ public class FixedThreadPool implements ThreadPool {
 
     public FixedThreadPool(int amountOfThreads) {
         this.amountOfThreads = amountOfThreads;
-    }
-
-    public int getAmountOfThreads() {
-        return amountOfThreads;
-    }
-
-    public LinkedList<Runnable> getTasks() {
-        return tasks;
     }
 
     @Override

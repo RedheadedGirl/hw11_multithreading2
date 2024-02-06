@@ -1,5 +1,6 @@
 package org.example;
 
+import lombok.Getter;
 import org.example.exceptions.SettingException;
 
 import java.util.ArrayList;
@@ -8,9 +9,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.Semaphore;
 
+@Getter
 public class ScalableThreadPool implements ThreadPool {
+
     private final int minAmountOfThreads;
     private final int maxAmountOfThreads;
+
     private final LinkedList<Runnable> tasks = new LinkedList<>();
 
     public ScalableThreadPool(int minAmountOfThreads, int maxAmountOfThreads) throws SettingException {
@@ -20,10 +24,6 @@ public class ScalableThreadPool implements ThreadPool {
         if(minAmountOfThreads > maxAmountOfThreads) {
             throw new SettingException("Неверно задано число потоков!");
         }
-    }
-
-    public LinkedList<Runnable> getTasks() {
-        return tasks;
     }
 
     @Override
