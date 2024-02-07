@@ -15,17 +15,7 @@ public class Main {
         fixedThreadPool.execute(getRunnable(3));
         fixedThreadPool.start();
 
-        System.out.println("Main thread is " + Thread.currentThread().getName());
-        try {
-            System.out.println("sleep for task 4 started");
-            Thread.sleep(10000);
-            System.out.println("sleep for task 4 finished");
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } finally {
-            System.out.println("add one more");
-            fixedThreadPool.execute(getRunnable(4));
-        }
+        addLastTask(fixedThreadPool);
     }
 
     private static void scalableThreadPool() throws SettingException {
@@ -35,17 +25,7 @@ public class Main {
         scalableThreadPool.execute(getRunnable(3));
         scalableThreadPool.start();
 
-        System.out.println("Main thread is " + Thread.currentThread().getName());
-        try {
-            System.out.println("sleep for task 4 started");
-            Thread.sleep(10000);
-            System.out.println("sleep for task 4 finished");
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        } finally {
-            System.out.println("add one more");
-            scalableThreadPool.execute(getRunnable(4));
-        }
+        addLastTask(scalableThreadPool);
     }
 
     private static Runnable getRunnable(int number) {
@@ -59,5 +39,17 @@ public class Main {
             }
             System.out.println("Заканчивается " + Thread.currentThread().getName());
         };
+    }
+
+    private static void addLastTask(ThreadPool threadPool) {
+        try {
+            System.out.println("sleep for task 4 started");
+            Thread.sleep(10000);
+            System.out.println("sleep for task 4 finished");
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        } finally {
+            threadPool.execute(getRunnable(4));
+        }
     }
 }
